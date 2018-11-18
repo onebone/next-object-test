@@ -1,4 +1,6 @@
-define(() => {
+define(['lib/fabric', 'shapes', 'lib/priority-q'], (f, shapes, PriorityQueue) => {
+	const DEFAULT_COLOR = '#8bc34a';
+
 	return {
 		MouseInformation: class MouseInformation {
 			constructor() {
@@ -18,25 +20,49 @@ define(() => {
 				return Math.sqrt(dx * dx + dy * dy);
 			}
 		},
-		Shapes: class Shapes {
-			constructor() {
-				/**
-				 * @type {Shape[]}
-				 */
-				this.shapes = [];
+		Objects: class Objects {
+			constructor(canvas) {
+				this.objects = new PriorityQueue([], (a, b) => b.zIndex - a.zIndex);
+
+				this.shapeId = 0;
+				this.topZIndex = 0;
+				this.canvas = new f.Canvas(canvas);
 			}
 
-			pickShape(pos) { // 마우스를 클릭했을 때 도형을 선택하는 함수
+			addCircle(pos, radius, fill = DEFAULT_COLOR) {
+				const circle = new shapes.Circle(
+					this.shapeId++,
+					pos,
+					this.topZIndex++,
+					radius,
+					fill
+				);
+				this.addObject(circle);
+			}
+
+			addObject(obj) {
+				this.objects.enqueue(obj);
+			}
+
+			pickObject(pos) { // 마우스를 클릭했을 때 도형을 선택하는 함수
 				let ret = null;
-				this.shapes.forEach(shape => {
-					if(shape.isInside(pos)) {
-						if(ret === null || ret.zIndex < shape.zIndex) { // 가장 위에 있는 도형을 선택하기
-							ret = shape;
+				this.objects.forEach(object => {
+					if(object.isInside(pos)) {
+						if(ret === null || ret.zIndex < object.zIndex) { // 가장 위에 있는 도형을 선택하기
+							ret = object;
 						}
 					}
 				});
 
 				return ret;
+			}
+
+			renderAll() {
+				this.objects.forEach(object => {
+					object.render(this.canvas);
+				});
+
+				this.canvas.renderAll();
 			}
 		}
 	};
