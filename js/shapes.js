@@ -9,6 +9,8 @@ define(['lib/fabric'], (f) => {
 			this.id = id;
 			this.pos = pos;
 			this.zIndex = zIndex;
+
+			this.rendered = false;
 		}
 
 		isInside(pos) {
@@ -39,7 +41,19 @@ define(['lib/fabric'], (f) => {
 			}
 
 			render(canvas) {
+				if(!this.rendered) {
+					canvas.add(this.obj);
 
+					this.rendered = true;
+				}
+			}
+
+			remove(canvas) {
+				if(this.rendered) {
+					canvas.remove(this.obj);
+
+					this.rendered = false;
+				}
 			}
 		}
 	};
