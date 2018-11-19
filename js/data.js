@@ -1,23 +1,27 @@
-define(['lib/fabric', 'shapes', 'lib/priority-q'], (f, shapes, PriorityQueue) => {
-	const DEFAULT_COLOR = '#8bc34a';
+define(['lib/fabric', 'shapes', 'lib/priority-q', 'config'], (f, shapes, PriorityQueue, Config) => {
+	class Vector2 {
+		constructor(x, y) {
+			this.x = x;
+			this.y = y;
+		}
 
+		add(x, y) {
+			return new Vector2(this.x + x, this.y + y);
+		}
+
+		distance(pos) {
+			let dx = this.x - pos.x;
+			let dy = this.y - pos.y;
+
+			return Math.sqrt(dx * dx + dy * dy);
+		}
+	}
 	return {
+		Vector2: Vector2,
 		MouseInformation: class MouseInformation {
 			constructor() {
 				this.hold = null;
-			}
-		},
-		Vector2: class Vector2 {
-			constructor(x, y) {
-				this.x = x;
-				this.y = y;
-			}
-
-			distance(pos) {
-				let dx = this.x - pos.x;
-				let dy = this.y - pos.y;
-
-				return Math.sqrt(dx * dx + dy * dy);
+				this.prev = new Vector2(0, 0);
 			}
 		},
 		Objects: class Objects {
@@ -29,7 +33,7 @@ define(['lib/fabric', 'shapes', 'lib/priority-q'], (f, shapes, PriorityQueue) =>
 				this.canvas = new f.StaticCanvas(canvas);
 			}
 
-			addCircle(pos, radius, fill = DEFAULT_COLOR) {
+			addCircle(pos, radius, fill = Config.DefaultShapeColor) {
 				const circle = new shapes.Circle(
 					this.shapeId++,
 					pos,
