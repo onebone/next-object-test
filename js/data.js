@@ -26,7 +26,7 @@ define(['lib/fabric', 'shapes', 'lib/priority-q'], (f, shapes, PriorityQueue) =>
 
 				this.shapeId = 0;
 				this.topZIndex = 0;
-				this.canvas = new f.Canvas(canvas);
+				this.canvas = new f.StaticCanvas(canvas);
 			}
 
 			addCircle(pos, radius, fill = DEFAULT_COLOR) {
