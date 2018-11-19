@@ -1,9 +1,8 @@
-define(['lib/fabric', 'config'], (f, config) => {
+define(['lib/fabric', 'config', 'data', 'math'], (f, config, data, math) => {
 	const ANCHOR_POSITION = [
-		   0,
-		1, 2, 3,
-		4,    5,
-		6, 7, 8
+		0, 1, 2,
+		4,    6,
+		8, 9, 10
 	];
 
 	class Anchor {
@@ -17,6 +16,8 @@ define(['lib/fabric', 'config'], (f, config) => {
 				left: pos.x, top: pos.y,
 				width: config.AnchorSize, height: config.AnchorSize
 			});
+
+			this.pos = pos;
 
 			this.rendered = false;
 		}
@@ -37,37 +38,6 @@ define(['lib/fabric', 'config'], (f, config) => {
 			}
 		}
 
-		onParentMove(dx, dy) {
-			const x = this.obj.get('left');
-			const y = this.obj.get('right');
-			this.obj.set({
-				left: x + dx,
-				top: y + dy
-			});
-		}
-	}
-
-	class ShapeObject {
-		/**
-		 * @param {Number} id
-		 * @param {Vector2} pos
-		 * @param {Number} zIndex
-		 */
-		constructor(id, pos, zIndex) {
-			this.id = id;
-			this.pos = pos;
-			this.zIndex = zIndex;
-			this.obj = null;
-
-			this.rendered = false;
-		}
-
-		isInside(pos) {
-			return false;
-		}
-
-		render(canvas) {}
-
 		move(dx, dy) {
 			this.pos.x += dx;
 			this.pos.y += dy;
@@ -79,24 +49,94 @@ define(['lib/fabric', 'config'], (f, config) => {
 		}
 	}
 
+	class ShapeObject extends math.Vector2 {
+		/**
+		 * @param {Number} id
+		 * @param {Vector2} pos
+		 * @param {Vector2} size
+		 * @param {Number} zIndex
+		 */
+		constructor(id, pos, size, zIndex) {
+			super(pos.x, pos.y);
+
+			this.id = id;
+			this.size = size;
+			this.zIndex = zIndex;
+			this.obj = null;
+
+			this.anchors = [];
+
+			this.rendered = false;
+		}
+
+		isInside(pos) {
+			return false;
+		}
+
+		render(canvas) {
+			this.anchors.forEach(a => {
+				a.render(canvas);
+			});
+		}
+
+		move(dx, dy) {
+			this.x += dx;
+			this.y += dy;
+
+			this.obj.set({
+				left: this.x,
+				top: this.y
+			});
+
+			this.anchors.forEach(a => {
+				a.move(dx, dy);
+			});
+		}
+
+		createAnchors() {
+			ANCHOR_POSITION.forEach(v => {
+				const dx = v & 0b0011;
+				const dy = (v & 0b1100) >>> 2;
+
+				this.anchors.push(
+					new Anchor(
+						this,
+						new math.Vector2(
+							this.x + dx * this.size.x * 0.5 - config.AnchorSize * 0.5,
+							this.y + dy * this.size.y * 0.5 - config.AnchorSize * 0.5
+						)
+					)
+				);
+			});
+		}
+
+		removeAnchors(canvas) {
+			this.anchors.forEach(a => {
+				a.remove(canvas);
+			});
+
+			this.anchors = [];
+		}
+	}
+
 	return {
-		Circle: class extends ShapeObject {
+		Circle: class Circle extends ShapeObject {
 			constructor(id, pos, zIndex, radius, fill) {
-				super(id, pos, zIndex);
+				super(id, pos, new math.Vector2(radius * 2, radius * 2), zIndex);
 
 				this.radius = radius;
 				this.fill = fill;
 
 				this.obj = new f.Circle({
 					radius: this.radius,
-					left: this.pos.x,
-					top: this.pos.y,
+					left: this.x,
+					top: this.y,
 					fill: this.fill
 				});
 			}
 
 			isInside(pos) {
-				return this.pos.add(this.radius, this.radius).distance(pos) < this.radius;
+				return this.add(this.radius, this.radius).distance(pos) < this.radius;
 			}
 
 			render(canvas) {
@@ -105,6 +145,8 @@ define(['lib/fabric', 'config'], (f, config) => {
 
 					this.rendered = true;
 				}
+
+				super.render(canvas);
 			}
 
 			remove(canvas) {

@@ -2,19 +2,23 @@ requirejs.config({
 	baseUrl: 'js/'
 });
 
-requirejs(['data', 'shapes'], (data, shapes) => {
+requirejs(['math', 'data', 'shapes'], (math, data, shapes) => {
 	const objs = new data.Objects('canvas');
 	const mouse = new data.MouseInformation();
 
-	objs.addCircle(new data.Vector2(10, 10), 100);
+	objs.addCircle(new math.Vector2(10, 10), 100);
 	objs.renderAll();
 
+	const canvas = objs.canvas;
 	addEventListener('mousedown', (e) => {
 		if(e.button === 0) {
-			const pos = new data.Vector2(e.clientX, e.clientY);
+			const pos = new math.Vector2(e.clientX, e.clientY);
 
 			mouse.hold = objs.pickObject(pos);
 			mouse.prev = pos;
+
+			mouse.hold.createAnchors();
+			mouse.hold.render(canvas);
 		}
 	});
 
@@ -35,11 +39,14 @@ requirejs(['data', 'shapes'], (data, shapes) => {
 
 	addEventListener('mouseup', (e) => {
 		if(e.button === 0) {
+			if(mouse.hold === null) {
+				objs.removeAllAnchors();
+			}
+
 			mouse.hold = null;
 		}
 	});
 
-	const canvas = objs.canvas;
 	function resize() {
 		canvas.setWidth(window.innerWidth);
 		canvas.setHeight(window.innerHeight);

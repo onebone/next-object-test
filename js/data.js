@@ -1,30 +1,14 @@
-define(['lib/fabric', 'shapes', 'lib/priority-q', 'config'], (f, shapes, PriorityQueue, Config) => {
-	class Vector2 {
-		constructor(x, y) {
-			this.x = x;
-			this.y = y;
-		}
+define(['lib/fabric', 'shapes', 'lib/priority-q', 'config', 'math'], (f, shapes, PriorityQueue, Config, math) => {
 
-		add(x, y) {
-			return new Vector2(this.x + x, this.y + y);
-		}
 
-		distance(pos) {
-			let dx = this.x - pos.x;
-			let dy = this.y - pos.y;
-
-			return Math.sqrt(dx * dx + dy * dy);
-		}
-	}
 	return {
-		Vector2: Vector2,
-		MouseInformation: class MouseInformation {
+		MouseInformation: class {
 			constructor() {
 				this.hold = null;
-				this.prev = new Vector2(0, 0);
+				this.prev = new math.Vector2(0, 0);
 			}
 		},
-		Objects: class Objects {
+		Objects: class {
 			constructor(canvas) {
 				this.objects = new PriorityQueue([], (a, b) => b.zIndex - a.zIndex);
 
@@ -59,6 +43,12 @@ define(['lib/fabric', 'shapes', 'lib/priority-q', 'config'], (f, shapes, Priorit
 				});
 
 				return ret;
+			}
+
+			removeAllAnchors() {
+				this.objects.forEach(obj => {
+					obj.removeAnchors(this.canvas);
+				});
 			}
 
 			renderAll() {
